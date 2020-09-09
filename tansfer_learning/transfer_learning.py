@@ -42,7 +42,7 @@ data_transforms = {
 # data_dir =  ml_data_path + 'hymenoptera_data'
 
 ml_data_path='/home/deakin/Desktop/fingers/'
-data_dir =  ml_data_path + 'my'
+data_dir =  ml_data_path + 'sdu01'
 
 
 image_datasets = { 
@@ -62,7 +62,6 @@ use_gpu = torch.cuda.is_available()
 
 
 ## 显示图片
-
 def imshow( inp, title=None ):
     """Imshow for Tensor"""
     inp = inp.numpy().transpose( ( 1, 2, 0 ) )
@@ -76,7 +75,6 @@ def imshow( inp, title=None ):
 
     if title is not None:
         plt.title( title )
-    
     plt.pause( 0.1 )   #暂停一会，让 plots 更新
 
 # 训练模型
@@ -178,7 +176,7 @@ def  visualize_model( model, num_images=6 ):
             ax = plt.subplot( num_images // 2 ,  2,  images_so_far )
             ax.axis( 'off' )
             ax.set_title( 'predicted: {}'.format( class_names[ preds[ j ] ]  ) )
-            imshow(  inputs.cpu( ).data[ j ] )
+            imshow(  inputs.cpu( ).data[ j ]  )
 
             if images_so_far == num_images:
                 return
@@ -207,7 +205,7 @@ def  classification2():
     # 每７个迭代让 learning_rate  衰减0.1 因素
     exp_lr_scheduler = lr_scheduler.StepLR( optimizer_ft, step_size = 7 ,  gamma= 0.1  )
     ## 训练和评估。如果使用CPU 将花费　15-25分钟，使用GPU 将少于１分钟
-    model_ft  = train_model(  model_ft, criterion, optimizer_ft, exp_lr_scheduler, num_enpoches=100  )
+    model_ft  = train_model(  model_ft, criterion, optimizer_ft, exp_lr_scheduler, num_enpoches=10  )
     visualize_model( model_ft )
     time.sleep( 10 )
 
@@ -237,6 +235,7 @@ def  feature_extraction():
     exp_lr_scheduler = lr_scheduler.StepLR( optimizer_conv , step_size = 7 ,  gamma= 0.1  )
     ## 训练和评估。如果使用CPU 将花费　15-25分钟，使用GPU 将少于１分钟
     model_conv  = train_model(  model_conv , criterion, optimizer_conv , exp_lr_scheduler, num_enpoches=20   )
+
     visualize_model( model_conv , 4   )
     time.sleep( 30 )
 
@@ -252,5 +251,4 @@ if __name__ == "__main__":
         imshow( out , title = [ class_names[x] for x in classes ] )
         time.sleep( 1 )
      """
-
 

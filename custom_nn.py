@@ -15,7 +15,6 @@ class TwoLayerNet( torch.nn.Module ):
         self.linear1 = torch.nn.Linear( D_in, H )
         self.linear2 = torch.nn.Linear( H,  D_out  )
 
-
     def forward(self, x ):
         """
         在　forward 函数中，我们接收一个变量的数据输入，我们必须返回一个变量的输出数据
@@ -24,7 +23,6 @@ class TwoLayerNet( torch.nn.Module ):
         h_relu = self.linear1( x ).clamp( min = 0 )
         y_pred = self.linear2( h_relu )
         return y_pred
-
 
 
 dtype  =  torch.FloatTensor

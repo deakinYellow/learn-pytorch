@@ -78,4 +78,3 @@ for images, labels in data_loader:
 
 
 
-
