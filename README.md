@@ -1,2 +1,2 @@
 # learn-pytorch
-some excamples of Pytorch
+some examples of Pytorch
