@@ -50,7 +50,7 @@ image_datasets = {
    for x in ['train', 'val' ]  }
 
 dataloaders = {
-    x: torch.utils.data.DataLoader( image_datasets[ x ], batch_size= 4, shuffle=True, num_workers= 4  )
+    x: torch.utils.data.DataLoader( image_datasets[ x ], batch_size= 6, shuffle=True, num_workers= 4  )
     for x  in ['train', 'val' ]
 }
 dataset_sizes = { x: len( image_datasets[x]  ) for x in ['train', 'val' ]   }
@@ -156,10 +156,9 @@ def train_model( model, criterion, optimizer, scheduler, num_enpoches=25 ):
 
 ## 显示模型预测效果
 # 写一个处理少量图片，并显示预测效果的通用函数
-def  visualize_model( model, num_images=6 ):
+def  visualize_model(  model, num_images=6  ):
     images_so_far = 0
-    fig = plt.figure( )
-
+    fig = plt.figure(  figsize=(9,6))
     for i, data in  enumerate( dataloaders['val'] ):
         inputs,  labels = data
         if use_gpu:
@@ -171,11 +170,20 @@ def  visualize_model( model, num_images=6 ):
         outputs = model(  inputs  )
         _, preds = torch.max( outputs.data, 1 )
 
-        for j in range( inputs.size( )[ 0 ] ):
+        ##打印预测结果
+        print( "preds: ", preds )
+
+        time.sleep( 1 )
+
+        for j in range( inputs.size( )[ 0 ]  ):
             images_so_far += 1
-            ax = plt.subplot( num_images // 2 ,  2,  images_so_far )
+            ax = plt.subplot(  num_images // 2 ,  2,  images_so_far )
             ax.axis( 'off' )
-            ax.set_title( 'predicted: {}'.format( class_names[ preds[ j ] ]  ) )
+            if(  labels.data[ j ] == preds.data[ j ]  ):
+                ret = "true"
+            else:
+                ret = "false"
+            ax.set_title(  'truth: {} '.format( class_names[ labels[ j ] ] ) + ' predicted: {} '.format( class_names[  preds[ j ]  ]  )  + "ret: " + ret  )
             imshow(  inputs.cpu( ).data[ j ]  )
 
             if images_so_far == num_images:
@@ -192,7 +200,7 @@ def  classification2():
     #  加载一个预训练的网络，并重置最后一个全连接层。
     model_ft = models.resnet18(  pretrained=True )
     num_ftrs = model_ft.fc.in_features
-    model_ft.fc = nn.Linear( num_ftrs, 2 )
+    model_ft.fc = nn.Linear( num_ftrs, 6  )
 
     if use_gpu:
         model_ft = model_ft.cuda( )
@@ -200,14 +208,14 @@ def  classification2():
     # 如你所见，所有参数都将被优化
     # 使用分类交叉熵Cross-Entropy做损失函数
     criterion = nn.CrossEntropyLoss( )
-    optimizer_ft = optim.SGD(  model_ft.parameters( ) , lr = 0.0001,  momentum =  0.9   )
+    optimizer_ft = optim.SGD(  model_ft.parameters( ) , lr = 0.001,  momentum =  0.9   )
     # optimizer_ft = optim.Adam( model_ft.parameters( ), lr = 0.001  )
     # 每７个迭代让 learning_rate  衰减0.1 因素
-    exp_lr_scheduler = lr_scheduler.StepLR( optimizer_ft, step_size = 7 ,  gamma= 0.1  )
+    exp_lr_scheduler = lr_scheduler.StepLR( optimizer_ft, step_size = 20 ,  gamma= 0.1  )
     ## 训练和评估。如果使用CPU 将花费　15-25分钟，使用GPU 将少于１分钟
-    model_ft  = train_model(  model_ft, criterion, optimizer_ft, exp_lr_scheduler, num_enpoches=10  )
+    model_ft  = train_model(  model_ft, criterion, optimizer_ft, exp_lr_scheduler, num_enpoches=300  )
     visualize_model( model_ft )
-    time.sleep( 10 )
+    input(">>>")
 
 ##  场景二 , 卷积神经网络作为固定的特征提取器
 """
@@ -222,7 +230,7 @@ def  feature_extraction():
 
     # 新构建的　module 的参数中，默认设置 requires_grad=True
     num_ftrs = model_conv.fc.in_features
-    model_conv.fc = nn.Linear( num_ftrs, 2 )
+    model_conv.fc = nn.Linear( num_ftrs, 6 )
 
     if use_gpu:
         model_conv = model_conv.cuda( )
@@ -232,15 +240,17 @@ def  feature_extraction():
 
     # 只对最后一层的参数进行优化
     optimizer_conv = optim.SGD( model_conv.fc.parameters( ), lr = 0.001, momentum= 0.9 )
-    exp_lr_scheduler = lr_scheduler.StepLR( optimizer_conv , step_size = 7 ,  gamma= 0.1  )
+    exp_lr_scheduler = lr_scheduler.StepLR( optimizer_conv , step_size = 100 ,  gamma= 0.1  )
     ## 训练和评估。如果使用CPU 将花费　15-25分钟，使用GPU 将少于１分钟
-    model_conv  = train_model(  model_conv , criterion, optimizer_conv , exp_lr_scheduler, num_enpoches=20   )
+    model_conv  = train_model(  model_conv , criterion, optimizer_conv , exp_lr_scheduler, num_enpoches=200   )
 
-    visualize_model( model_conv , 4   )
-    time.sleep( 30 )
+    visualize_model( model_conv ,  12  )
+    ### 等待结束
+    input(">>>")
+
 
 if __name__ == "__main__":
-    # classification2()
+    #classification2()
     feature_extraction( )
     """
     while True:
@@ -251,4 +261,3 @@ if __name__ == "__main__":
         imshow( out , title = [ class_names[x] for x in classes ] )
         time.sleep( 1 )
      """
-

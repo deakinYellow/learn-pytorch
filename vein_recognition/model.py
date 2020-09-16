@@ -22,6 +22,7 @@ class VeinRecognitionNetModel:
     def __init__( self , classes_size ,  learnning_rate, use_cuda ):
         ## ----------------------模型创建-----------------------------------
         self.classes_size  = classes_size
+        self.learnning_rate  = classes_size
 
         self.model = torchvision.models.resnet50( pretrained=True )    #resnet50 预训练模型
         ####禁止更新所有网络参数
@@ -29,7 +30,7 @@ class VeinRecognitionNetModel:
             param.requires_grad = False             
         # 新构建的　module 的参数中，默认设置 requires_grad=True
         num_ftrs = self.model.fc.in_features
-        self.model.fc  = nn.Linear( num_ftrs,  2  )
+        self.model.fc  = nn.Linear( num_ftrs,  classes_size  )
 
         if use_cuda:
             self.model  = self.model.cuda( )
@@ -39,9 +40,13 @@ class VeinRecognitionNetModel:
 
         # 只对最后一层的参数进行优化
         # 选择动量法对参数进行优化
-        self.optimizer = optim.SGD(  self.model.parameters( ), lr = learnning_rate , momentum= 0.9 )
+        self.optimizer = optim.SGD(  self.model.parameters( ), lr =  self.learnning_rate , momentum= 0.9 )
         # 每７轮迭代学习率变为原来的0.1
-        self.scheduler = lr_scheduler.StepLR( self.optimizer , step_size = 7 ,  gamma= 0.1  )
+        self.scheduler = lr_scheduler.StepLR( self.optimizer , step_size = 20 ,  gamma= 0.1  )
+
+    ### 从磁盘加载历史模型
+    def load_model_params( self,  model_params_file_path ):
+        self.model.load_state_dict(  torch.load( model_params_file_path ) )
 
     ###　参数： #  数据 # 迭代次数
     def  train( self ,  dataloaders ,  dataset_sizes,  num_enpoches = 25, use_cuda = True  ):
@@ -62,11 +67,11 @@ class VeinRecognitionNetModel:
 
                 running_loss = 0.0
                 running_corrects = 0
+
                 # 遍历数据
                 for data in dataloaders[ phase ]:
                     # 获取输入
                     inputs, labels = data
-
                     #　用 Variable 包装输入数据
                     if use_cuda:
                         inputs = Variable(  inputs.cuda( )  )
@@ -77,8 +82,7 @@ class VeinRecognitionNetModel:
                     # 设置梯度参数为０
                     self.optimizer.zero_grad( )
 
-                    print("================")
-                    print('===========inputs size: {:d} '.format( inputs.__len__( )  ) ) 
+                    # print('===========inputs size: {:d} '.format( inputs.__len__( )  ) ) 
                     #正向传递
                     outputs = self.model(  inputs  )
 
@@ -92,24 +96,23 @@ class VeinRecognitionNetModel:
                         self.optimizer.step( )
                         #print("update params.................")
 
-                    # 统计训练过程参数
+                    # 统计
                     running_loss += loss.data.item() * inputs.size( 0 )
                     running_corrects +=  torch.sum( preds == labels.data )
 
-                    epoch_loss = running_loss  /  dataset_sizes[ phase ]
-                    epoch_acc =  running_corrects.double()  /  dataset_sizes[ phase ]
+                epoch_loss = running_loss  /  dataset_sizes[ phase ]
+                epoch_acc =  running_corrects.double()  /  dataset_sizes[ phase ]
 
-                    print('{} Loss: {:.4f} Acc: {:.4f} '.format(  phase,  epoch_loss, epoch_acc  )  )
+                print('{} Loss: {:.4f} Acc: {:.4f} '.format(  phase,  epoch_loss, epoch_acc  )  )
 
-                    #如果是训练阶段，优化学习率
-                    if phase ==  'train':
-                        ##学习率优化
-                        self.scheduler.step()
+                #如果是训练阶段，优化学习率
+                if phase ==  'train':
+                    self.scheduler.step()
 
-                # 深拷贝model, 记录最好的模型参数
-                if phase == 'val' and epoch_acc > best_acc:
-                    best_acc = epoch_acc
-                    best_model_wts = copy.deepcopy(  self.model.state_dict( )  )
+            # 深拷贝model, 记录最好的模型参数
+            if phase == 'val' and epoch_acc > best_acc:
+                best_acc = epoch_acc
+                best_model_wts = copy.deepcopy(  self.model.state_dict( )  )
             print( '-' * 20 )
 
         ###统计训练时长
