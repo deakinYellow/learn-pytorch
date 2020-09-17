@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
-
 import  numpy as np
 
 # N 是一个batch的样本数量; D_in是输入维度;
 # H 是隐藏层向量的维度; D_out是输出维度.
 #N, D_in, H, D_out = 64, 1000, 100, 10
 N, D_in, H, D_out = 2, 1000, 100, 10
-
 
 # 创建随机的输入输出数据
 ##标准正态分布中随机选取
@@ -53,7 +51,4 @@ h_relu = np.maximum(h, 0)
 ##print( h_relu  )
 y_pred = h_relu.dot(w2)
 print( y_pred  ) 
-
-
-
 

@@ -16,7 +16,6 @@ N, D_in, H, D_out = 64, 1000, 100, 10
 x = Variable( torch.randn(  N, D_in).type( dtype  )  )
 y = Variable( torch.randn(  N, D_out).type( dtype  ) , requires_grad=False )
 
-
 ## 使用 nn 包将我们的模型定义为一些列图层
 ## nn.Sequential 是一个包含其他模块的模块，并将它们按顺序应用以产生其输出
 # 每个线性模块使用线性函数计算来自输入的输出，并保存内部变量的权重和偏差
@@ -58,18 +57,4 @@ for t in range(500):
 
     #在优化器上调用 step 函数会更新其参数
     optimizer.step()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
