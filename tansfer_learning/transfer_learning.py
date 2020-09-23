@@ -248,7 +248,6 @@ def  feature_extraction():
     ### 等待结束
     input(">>>")
 
-
 if __name__ == "__main__":
     #classification2()
     feature_extraction( )
@@ -261,3 +260,4 @@ if __name__ == "__main__":
         imshow( out , title = [ class_names[x] for x in classes ] )
         time.sleep( 1 )
      """
+

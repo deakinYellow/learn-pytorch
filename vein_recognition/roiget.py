@@ -1,10 +1,15 @@
 #-*-coding: utf-8-*-
+
+import  os 
+import  shutil 
+import argparse
+import parser
 import cv2
 import numpy as np  
 
 # img_dir="/home/deakin/Desktop/fingers/sdu01/train/finger01"
 # img_dir="/home/deakin/Desktop/fingers/my/train/finger1"
-img_dir="/media/deakin/00000354000386C6/work/finger-vein/finger-17-100-cl/00000"
+img_dir="/media/deakin/00000354000386C6/work/finger-vein/finger-17-50/train/00000"
 
 ###加载图像，获取ROI
 # class ROI_Get:
@@ -46,19 +51,16 @@ def get_ROI( img , f_threshold  ):
     rect = np.array( [ x_min, y_min, x_max - x_min, y_max - y_min  ], dtype=int )
     print( rect )
     return thresh,rect
-
-
-
+"""
 if __name__ == "__main__":
     print("============ROIGET===============")
-
     base_index = 0
     for index  in range( 50 ):
         file_name = "/finger_" +  str( base_index + index ).zfill( 8 ) + ".jpg"
         img_path = img_dir + file_name
         print("image path:", img_path )
         img = cv2.imread( img_path , cv2.IMREAD_GRAYSCALE )  ###jpg转为灰度
-        if( img.all() == None ):
+        if( img.any() == None ):
             print("load image fail!")
             exit(0)
         ##进行ROＩ提取
@@ -76,3 +78,53 @@ if __name__ == "__main__":
         input(">>>push enter  to next.")
 
     cv2.destroyAllWindows()
+
+"""
+
+if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--files_path", type=str, default="images/", help="path for  images files")
+    parser.add_argument("--cut_files_path", type=str, default="cut_images/", help="path for  images  after cut")
+
+    params_opt = parser.parse_args()
+
+    ###开始遍历数据文件夹
+    for parent, dirs, file_names in os.walk( params_opt.files_path, followlinks=True ):
+        for file_name in file_names:
+            file_path = os.path.join( parent,  file_name )
+            print("parent: {}".format( parent ) )
+            print('full path : {}'.format(  file_path ) )
+            img_path = file_path
+            ## 1.提取roi区域
+            """
+            img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)  # jpg转为灰度
+            if(img.any() == None):
+                print("load image fail!")
+                exit(0)
+            ##进行ROＩ提取
+            thresh, rect = get_ROI( img, f_threshold=30 )
+            ##裁剪ROI区域
+            # y:y+h x:x+w
+            roi = img[ rect[1]:rect[1]+rect[3], rect[0]:rect[0]+rect[2] ] 
+
+            ###修改尺寸，双线性插值
+            roi = cv2.resize(  roi, ( 320, 128 ), interpolation=cv2.INTER_LINEAR  )  
+            ###保存ROI图像
+            new_img_path =  img_path[0:-3] + "bmp"  ##修改后缀
+            cv2.imwrite( new_img_path , roi )
+
+            # cv2.imshow("origin", img )
+            # cv2.imshow("roi", roi  )
+            # cv2.waitKey(100)
+            # input(">>>push enter  to next.")
+            """
+            ##2.删除后缀为jpg的文件
+            if( img_path[-3:] == "jpg" ):
+                os.remove( file_path )
+            """
+            """
+        print("一共写入{}个数据, 保存在目录{}".format( file_names.__len__()  ,  parent   ) )
+    cv2.destroyAllWindows()
+
+

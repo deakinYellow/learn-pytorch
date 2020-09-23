@@ -19,16 +19,21 @@ import copy
 """
 class VeinRecognitionNetModel:
 
-    def __init__( self , classes_size ,  learnning_rate, use_cuda ):
+    def __init__( self , classes_size ,  learnning_rate, learnning_rate_step,  use_cuda ):
         ## ----------------------模型创建-----------------------------------
         self.classes_size  = classes_size
         self.learnning_rate  = classes_size
 
         self.model = torchvision.models.resnet50( pretrained=True )    #resnet50 预训练模型
+        # self.model = torchvision.models.resnet18( pretrained=True )
+
         ####禁止更新所有网络参数
         for param in self.model.parameters( ):
             param.requires_grad = False             
-        # 新构建的　module 的参数中，默认设置 requires_grad=True
+        """
+        """
+
+        ###重置最后全连接层数
         num_ftrs = self.model.fc.in_features
         self.model.fc  = nn.Linear( num_ftrs,  classes_size  )
 
@@ -37,12 +42,16 @@ class VeinRecognitionNetModel:
 
          # 损失函数选取, 交叉熵做损失
         self.criterion = nn.CrossEntropyLoss( )
+        # self.criterion = nn.NLLLoss( )
 
         # 只对最后一层的参数进行优化
         # 选择动量法对参数进行优化
         self.optimizer = optim.SGD(  self.model.parameters( ), lr =  self.learnning_rate , momentum= 0.9 )
-        # 每７轮迭代学习率变为原来的0.1
-        self.scheduler = lr_scheduler.StepLR( self.optimizer , step_size = 20 ,  gamma= 0.1  )
+        # 随机梯度下降法进行优化
+        # self.optimizer = optim.Adam( self.model.parameters(), lr=self.learnning_rate  )
+
+        # 每n轮迭代学习率变为原来的0.5
+        self.scheduler = lr_scheduler.StepLR( self.optimizer , learnning_rate_step ,  gamma= 0.5  )
 
     ### 从磁盘加载历史模型
     def load_model_params( self,  model_params_file_path ):
@@ -126,4 +135,6 @@ class VeinRecognitionNetModel:
 
 if __name__ == "__main__":
     pass
+
+
 
