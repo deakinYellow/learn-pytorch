@@ -24,14 +24,14 @@ class VeinRecognitionNetModel:
         self.classes_size  = classes_size
         self.learnning_rate  = classes_size
 
-        self.model = torchvision.models.resnet50( pretrained=True )    #resnet50 预训练模型
-        # self.model = torchvision.models.resnet18( pretrained=True )
-
-        ####禁止更新所有网络参数
-        for param in self.model.parameters( ):
-            param.requires_grad = False             
-        """
-        """
+        # self.model = torchvision.models.resnet50( pretrained=True )    #resnet50 预训练模型
+        self.model = torchvision.models.resnet18( pretrained=True )
+        
+        ####禁止更新部分网络参数
+        for i , param in enumerate( self.model.parameters( ) ):
+            print("param: " , i  )
+            if( i < 61 ) :
+                param.requires_grad = False             
 
         ###重置最后全连接层数
         num_ftrs = self.model.fc.in_features
@@ -46,9 +46,9 @@ class VeinRecognitionNetModel:
 
         # 只对最后一层的参数进行优化
         # 选择动量法对参数进行优化
-        self.optimizer = optim.SGD(  self.model.parameters( ), lr =  self.learnning_rate , momentum= 0.9 )
+        # self.optimizer = optim.SGD(  self.model.parameters( ), lr =  self.learnning_rate , momentum= 0.9 )
         # 随机梯度下降法进行优化
-        # self.optimizer = optim.Adam( self.model.parameters(), lr=self.learnning_rate  )
+        self.optimizer = optim.Adam( self.model.parameters(), lr=self.learnning_rate  )
 
         # 每n轮迭代学习率变为原来的0.5
         self.scheduler = lr_scheduler.StepLR( self.optimizer , learnning_rate_step ,  gamma= 0.5  )
@@ -93,10 +93,15 @@ class VeinRecognitionNetModel:
 
                     # print('===========inputs size: {:d} '.format( inputs.__len__( )  ) ) 
                     #正向传递
+                    # print("intputs: ", inputs[ 0 ] )
                     outputs = self.model(  inputs  )
-
+                    #查看输出，输出范围没限制,最后一层为线性层
                     _, preds =  torch.max( outputs.data, 1 )
-                    #计算损失
+                    # print("outputs: ", outputs )
+                    # print("preds: ", preds )
+                    # print("labels: ", labels )
+                    # labels:  tensor([0, 7, 6, 7], device='cuda:0')
+                    #这里计算损失,每个预测的损失,所以必须包含outputs信息
                     loss = self.criterion( outputs, labels )
 
                     #如果是训练阶段，向后传递和优化
@@ -118,7 +123,7 @@ class VeinRecognitionNetModel:
                 if phase ==  'train':
                     self.scheduler.step()
 
-            # 深拷贝model, 记录最好的模型参数
+            # 深拷贝model, 记录验证效果最好的模型参数
             if phase == 'val' and epoch_acc > best_acc:
                 best_acc = epoch_acc
                 best_model_wts = copy.deepcopy(  self.model.state_dict( )  )

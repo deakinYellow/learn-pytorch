@@ -25,10 +25,9 @@ plt.ion()   # interactive mode
 #    很重要
 data_transforms = {
     'train': transforms.Compose([
-        #transforms.RandomResizedCrop( 224 ),
         transforms.RandomHorizontalFlip( ),       
         transforms.ToTensor( ),       
-        transforms.Normalize([0.485, 0.456, 0.406 ], [ 0.229, 0.224, 0.225 ] )       
+        transforms.Normalize([0.485, 0.456, 0.406 ], [ 0.229, 0.224, 0.225 ] )       ##图像标准化
     ]),
     'val': transforms.Compose([
         # transforms.Resize( (320,128)),
@@ -49,8 +48,9 @@ image_datasets = {
     x: datasets.ImageFolder( os.path.join( data_dir , x ), data_transforms[ x ] )
    for x in ['train', 'val' ]  }
 
+### batch_size 很重要太小可能会导致训练出现nan
 dataloaders = {
-    x: torch.utils.data.DataLoader( image_datasets[ x ], batch_size= 4, shuffle=True, num_workers= 4  )
+    x: torch.utils.data.DataLoader( image_datasets[ x ], batch_size= 12, shuffle=True, num_workers= 4  )
     for x  in ['train', 'val' ]
 }
 
@@ -97,11 +97,11 @@ def  visualize_model(  model ,  dataloaders,  num_images , use_cuda ):
             model.eval()
 
         outputs = model(  inputs  )
-        outputs = outputs / 10000   ##需要缩放，否则　softmax计算结果基本都是0 和１
-        print("outputs: {}".format(  outputs  ) )
+        outputs = outputs / 1000   ##需要缩放，否则　softmax计算结果基本都是0 和１
+        # print("outputs: {}".format(  outputs  ) )
         ##取softmax值,可代表概率
         softmax = f.softmax( outputs , dim = 1  )
-        print( "softmax: ", softmax )
+        # print( "softmax: ", softmax )
         scores, preds = torch.max( softmax, 1 )
         print( "scores: ", scores )
 
@@ -136,20 +136,17 @@ if __name__ == "__main__":
     print("==============Vein Recognition Train Test========================")
     ##生成模型对象
     print( "cuda is: ", use_cuda )
-    vein_net = VeinRecognitionNetModel( 10 , 0.0001, 50,  use_cuda  )
+    vein_net = VeinRecognitionNetModel( 10 , 0.001, 50,  use_cuda  )
 
     ##从磁盘加载历史模型
     vein_net.load_model_params(  pre_model_params_file  )
 
     ##模型训练
-    # ret_model = vein_net.train( dataloaders, dataset_sizes, 50, use_cuda )
-
+    # ret_model = vein_net.train( dataloaders, dataset_sizes, 500, use_cuda )
     ###保存模型到磁盘 , 仅保存和加载模型参数(推荐使用)
     # torch.save( ret_model.state_dict(),  pre_model_params_file  )
 
     ###测试效果
-    visualize_model(  vein_net.model ,  dataloaders, 21,  use_cuda )
+    visualize_model(  vein_net.model ,  dataloaders, 24,  use_cuda )
     input(">>>")
-
-
 
